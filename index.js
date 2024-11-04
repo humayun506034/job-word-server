@@ -12,8 +12,8 @@ const app = express()
 const corsOptions = {
     origin: [
         "http://localhost:5173",
-        "https://jobword.netlify.app",
-       
+        "https://job-word.firebaseapp.com",
+        "https://job-word.web.app"
     ],
     credentials: true,
 }
@@ -35,7 +35,7 @@ const client = new MongoClient(uri, {
 // middleware
 const verifyToken = (req, res, next) => {
     const token = req?.cookies?.token
-    // console.log("token in the middleware ", token)
+    console.log("token in the middleware ", token)
 
     if (!token) {
         return res.status(401).send({ message: 'unauthorized access' })
@@ -47,7 +47,7 @@ const verifyToken = (req, res, next) => {
                 console.log(err)
                 return res.status(401).send({ message: 'unauthorized access' })
             }
-            // console.log(decoded)
+            console.log(decoded)
             req.user = decoded
             next()
         })
@@ -64,7 +64,7 @@ async function run() {
         //creating Token
         app.post("/jwt", (req, res) => {
             const user = req.body;
-            // console.log("user for token", user);
+            console.log("user for token", user);
             const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d' });
 
             res.cookie('token', token, {
@@ -96,7 +96,7 @@ async function run() {
         app.get('/allAssignment', async (req, res) => {
 
             const filter = req.query;
-            // console.log(filter)
+            console.log(filter)
             const query = {
                 assignment_title: {"$regex": filter.search, $options: "i"}
             }
@@ -154,14 +154,14 @@ async function run() {
             res.send(result)
         })
         // get by email
-        app.get('/myAssignment/:email', async (req, res) => {
+        app.get('/myAssignment/:email',verifyToken, async (req, res) => {
 
     
             const myEmail = req.params.email
-            // .log("token owner", myEmail)
+            console.log("token owner", myEmail)
 
             const tokenEmail = req?.user?.email
-            // console.log("token email vai", tokenEmail)
+            console.log("token email vai", tokenEmail)
 
             if (myEmail !== tokenEmail) {
                 return res.status(403).send({ message: 'forbidden access' })
@@ -191,7 +191,7 @@ async function run() {
             const id = req.params.id
             const query = { _id: new ObjectId(id) }
             const status = req.body
-            // console.log(status)
+            console.log(status)
             const updateDoc = {
                 $set: {
                     assignment_title: status.assignment_title,
